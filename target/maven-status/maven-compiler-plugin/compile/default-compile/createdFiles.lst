@@ -1,0 +1,4 @@
+com\dracoul\tech\todobackend\controller\TaskController.class
+com\dracoul\tech\todobackend\entity\Task.class
+com\dracoul\tech\todobackend\TodoBackendApplication.class
+com\dracoul\tech\todobackend\repo\TaskRepository.class
