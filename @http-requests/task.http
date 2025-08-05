@@ -1,0 +1,13 @@
+POST http://localhost:8080/api/task/create
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ0ZXN0dXNlciIsImlhdCI6MTc1Mzc5Mjc2NSwiZXhwIjoxNzUzODc5MTY1fQ.Czmou8Fe3UNe-GdXU_7eC6-nKsYgQeexDbhh9yCo4gs
+
+{
+  "title": "Ma première tâche",
+  "description": "Décrire les fonctionnalités",
+  "priority": "HIGH",
+  "dueDate": "2025-08-15T10:00:00",
+  "projectId": 1,
+  "tagIds": [1, 2]
+}
+
