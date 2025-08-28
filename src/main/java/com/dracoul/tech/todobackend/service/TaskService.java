@@ -27,38 +27,31 @@ import java.util.stream.Collectors;
 public class TaskService {
     private final TaskRepository taskRepository;
     private final TagRepository tagRepository;
-
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
 
     @Transactional
     public Task createTask(TaskRequestDTO dto) {
-        // Récupère l’utilisateur connecté
-        String usename = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByUsername(usename)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé : " + usename));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé : " + username));
 
-        // Récupère le projet (optionnel)
-//        Project project = null;
-//        if (dto.getProjectId() != null) {
-//            project = projectRepository.findById(dto.getProjectId())
-//                    .orElseThrow(() -> new RuntimeException("Projet non trouvé avec id " + dto.getProjectId()));
-//        }
+        Project project = null;
+        if (dto.getProjectId() != null) {
+            project = projectRepository.findById(dto.getProjectId())
+                    .orElseThrow(() -> new RuntimeException("Projet non trouvé avec id " + dto.getProjectId()));
+        }
 
-        // Récupère les tags (optionnels)
-        List<Tag> tags = dto.getTagIds() != null ? tagRepository.findAllById(dto.getTagIds()) : List.of();
+        List<Tag> tags = (dto.getTagIds() != null) ? tagRepository.findAllById(dto.getTagIds()) : List.of();
 
-        // Construction de la tâche
         Task task = new Task();
         task.setTitle(dto.getTitle());
         task.setDescription(dto.getDescription());
         task.setPriority(dto.getPriority());
         task.setDueDate(dto.getDueDate());
-        task.setCreatedAt(LocalDateTime.now());
-        task.setUpdatedAt(LocalDateTime.now());
         task.setAssignedTo(user);
-       // task.setProject(project);
-       // task.setTags(tags);
+        task.setProject(project);
+        task.setTags(tags);
 
         return taskRepository.save(task);
     }
@@ -75,36 +68,47 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
+    @Transactional
+    public Task updateTask(Long id, TaskRequestDTO dto) {
+        Task task = taskRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tâche non trouvée avec id " + id));
+
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setPriority(dto.getPriority());
+        task.setDueDate(dto.getDueDate());
+
+        if (dto.getProjectId() != null) {
+            Project project = projectRepository.findById(dto.getProjectId())
+                    .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
+            task.setProject(project);
+        }
+
+        if (dto.getTagIds() != null) {
+            List<Tag> tags = tagRepository.findAllById(dto.getTagIds());
+            task.setTags(tags);
+        }
+
+        return taskRepository.save(task);
+    }
+
     public List<TaskRequestDTO> getTasksForCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
 
-        List<Task> tasks = taskRepository.findByAssignedTo(user);
-        return tasks.stream().map(this::mapToDto).collect(Collectors.toList());
+        return taskRepository.findByAssignedTo(user)
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
     }
+
     private TaskRequestDTO mapToDto(Task task) {
         TaskRequestDTO dto = new TaskRequestDTO();
-//        dto.setId(task.getId());
         dto.setTitle(task.getTitle());
         dto.setDescription(task.getDescription());
-//        dto.setStatus(task.getStatus());
-//        dto.setCompleted(task.isCompleted());
         dto.setPriority(task.getPriority());
         dto.setDueDate(task.getDueDate());
-//        dto.setCreatedAt(task.getCreatedAt());
-//        dto.setUpdatedAt(task.getUpdatedAt());
-
-        // Optionnel selon ton besoin
-//        if (task.getAssignedTo() != null) {
-//            dto.setAssignedToUsername(task.getAssignedTo().getUsername());
-//        }
-
         return dto;
     }
-
-
-
-
 }
-
